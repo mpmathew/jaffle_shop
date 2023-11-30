@@ -1,0 +1,13 @@
+jaffle_shop:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: postgres
+      user: postgres
+      password: QHerHOomknBu7iP0FCo2
+      port: 5432
+      dbname: postgres
+      schema: public
+      threads: 4
+  
