@@ -4,7 +4,7 @@ jaffle_shop:
     dev:
       type: postgres
       host: postgres
-      user: {{env_var('POSTGRES_ACCOUNT'['POSTGRES_USER'])}}
+      user: "{{env_var('POSTGRES_ACCOUNT'['POSTGRES_USER'])}}"
       password: "{{env_var('POSTGRES_ACCOUNT'['POSTGRES_PASSWORD'])}}"
       port: 5432
       dbname: postgres
