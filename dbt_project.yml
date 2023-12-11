@@ -24,3 +24,5 @@ models:
       materialized: table
       staging:
         materialized: "{{ var('materialization_override', 'view') }}"
+
+vars: "{{ var('env_vars') }}"
