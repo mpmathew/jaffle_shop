@@ -25,4 +25,5 @@ models:
       staging:
         materialized: "{{ var('materialization_override', 'view') }}"
 
-vars: "{{ from_yaml_file('dev_vars.yml') }}"
+vars: 
+  materialization_override: "{{ from_yaml_file('dev_vars.yml') }}"
