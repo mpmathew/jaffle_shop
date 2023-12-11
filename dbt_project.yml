@@ -26,4 +26,4 @@ models:
         materialized: view
 
 vars: 
-  materialization_override: view 
+  staging_order_name: stg_orders 
