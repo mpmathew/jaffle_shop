@@ -8,7 +8,7 @@ models:
           - unique
           - not_null
 
-  - name: stg_orders
+  - name: "{{var(staging_order_name)}}"
     columns:
       - name: order_id
         tests:
