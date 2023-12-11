@@ -26,4 +26,4 @@ models:
         materialized: "{{ var('materialization_override') }}"
 
 vars: 
-  materialization_override: 'view'  
+  materialization_override: view 
