@@ -23,7 +23,7 @@ models:
   jaffle_shop:
       materialized: table
       staging:
-        materialized: "{{ var('materialization_override') }}"
+        materialized: view
 
 vars: 
   materialization_override: view 
