@@ -26,4 +26,4 @@ models:
         materialized: "{{ var('materialization_override') }}"
 
 vars: 
-  materialization_override: "{{ from_yaml_file('dev_vars.yml') }}"
+  - dev_vars.yml
