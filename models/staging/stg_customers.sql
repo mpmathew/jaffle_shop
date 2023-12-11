@@ -11,7 +11,7 @@ with source as (
 renamed as (
 
     select
-        id as customer_id,
+        id as "{{var('id_name')}}",
         first_name,
         last_name
 
