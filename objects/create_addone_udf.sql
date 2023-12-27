@@ -1,4 +1,4 @@
-USE SCHEMA TEST_DEV_DB.TEST_SCHEMA;
+USE {{ params.schema_name }};
 
 CREATE OR REPLACE FUNCTION addone(i int)
 RETURNS INT
