@@ -1,4 +1,3 @@
 vars:
   materialization_override: 'view'
   some_other_variable: 'value_for_dev'
-#
