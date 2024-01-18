@@ -17,5 +17,5 @@ environment_variable_names as (
 
     select 
     variable,
-    env_var(variable) as value
+    "{{env_var('variable')}}" as value
     from environment_variable_names
