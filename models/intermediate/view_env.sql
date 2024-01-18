@@ -1,6 +1,6 @@
 -- models/environment_variables_model.sql
 
-with environment_variables as (
+with source as (
     select * from {{ ref('variables') }}
 
 ),
@@ -10,7 +10,7 @@ with environment_variables as (
 environment_variable_names as (
     select 
     variable
-    from environment_variables
+    from source
 )
 
 -- Model block to define the transformation and fetch values using env_var()
