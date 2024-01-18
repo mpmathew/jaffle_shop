@@ -5,4 +5,4 @@ WITH env_vars AS (
 SELECT
   SPLIT_PART(kv, '=', 1) AS key,
   SPLIT_PART(kv, '=', 2) AS value
-FROM env_vars;
+FROM env_vars
