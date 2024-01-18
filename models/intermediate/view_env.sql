@@ -1,13 +1,11 @@
 -- models/environment_variables_model.sql
 
--- Source block to define the source of your data
-source: environment_variables {
-  location: 'variables.csv'
-  schema: 'public'
-  file_format: csv
-}
+with environment_variables as (
+    select * from {{ ref('variables') }}
 
--- Staging model to load the environment variable names into a temporary table
+),
+
+  -- Staging model to load the environment variable names into a temporary table
 model: environment_variable_names {
   SELECT
     variable
