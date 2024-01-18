@@ -2,9 +2,7 @@
 
 -- Source block to define the source of your data
 source: environment_variables {
-  # Assuming your CSV file is located in the 'data' directory
-  # Update the file path and format accordingly
-  location: 'models/intermediate/variables.csv'
+  location: 'variables.csv'
   schema: 'public'
   file_format: csv
 }
