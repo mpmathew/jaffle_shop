@@ -1,4 +1,4 @@
-with env_vars_table as (
+env_vars_table as (
 SELECT 'DBT_ESG_DB' as variable, {{env_var('DBT_ESG_DB')}} as value UNION ALL
 SELECT 'DBT_ENT_STG_SCHEMA' as variable, {{env_var('DBT_ENT_STG_SCHEMA')}} as value UNION ALL
 SELECT 'DBT_ENT_STG_SCHEMA' as variable, {{env_var('DBT_ENT_STG_SCHEMA')}} as value UNION ALL
@@ -117,6 +117,6 @@ SELECT 'DBT_SRC_SALESFORCE_DB' as variable, {{env_var('DBT_SRC_SALESFORCE_DB')}}
 SELECT 'DBT_SRC_SALESFORCE_SCHEMA' as variable, {{env_var('DBT_SRC_SALESFORCE_SCHEMA')}} as value UNION ALL
 SELECT 'DBT_SRC_SFINTEGRATION_TABLE' as variable, {{env_var('DBT_SRC_SFINTEGRATION_TABLE')}} as value UNION ALL
 SELECT 'DBT_SRC_SFINTEGRATION_FILE_FORMAT' as variable, {{env_var('DBT_SRC_SFINTEGRATION_FILE_FORMAT')}} as value UNION ALL
-),
+)
 select * from env_vars_table
     
