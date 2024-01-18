@@ -1,3 +1,3 @@
-{% macro log_variable(my_variable) %}
- {% do log("~ argument(my_variable): "  ~ env_var(my_variable), info=True) %}
+{% macro log_variable() %}
+ {% do log('DBT_ESG_DB: ' ~ env_var(DBT_ESG_DB), info=True) %}
 {% endmacro %}
