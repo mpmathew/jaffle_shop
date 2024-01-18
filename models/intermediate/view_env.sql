@@ -1,2 +1,2 @@
-{{ log_variable("DBT_ESG_DB") }}
+{{ log_variable() }}
 select 1 as dummy
