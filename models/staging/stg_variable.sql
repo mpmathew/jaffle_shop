@@ -8,3 +8,4 @@ with source as (
     variable
     from source
 )
+select * from environment_variable_names
