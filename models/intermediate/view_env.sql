@@ -6,19 +6,16 @@ with environment_variables as (
 ),
 
   -- Staging model to load the environment variable names into a temporary table
-model: environment_variable_names {
-  SELECT
+
+environment_variable_names as (
+    select 
     variable
-  FROM
-    {{ ref('environment_variables') }};
-}
+    from environment_variables
+)
 
 -- Model block to define the transformation and fetch values using env_var()
-model: environment_variables_table {
-  SELECT
+
+    select 
     variable,
     env_var(variable) as value
-  FROM
-    {{ ref('environment_variable_names') }};
-}
-
+    from environment_variable_name
