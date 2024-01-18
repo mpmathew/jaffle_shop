@@ -1,8 +1,28 @@
-WITH env_vars AS (
+-- models/environment_variables_model.sql
+
+-- Source block to define the source of your data
+source: environment_variables {
+  # Assuming your CSV file is located in the 'data' directory
+  # Update the file path and format accordingly
+  location: 'models/intermediate/variables.csv'
+  schema: 'public'
+  file_format: csv
+}
+
+-- Staging model to load the environment variable names into a temporary table
+model: environment_variable_names {
   SELECT
-    UNNEST(REGEXP_MATCHES(CURRENT_SETTING(), E'\\w+=\\\'(.*?)(?=\\\'\\,\\s*\\w+=|$)')) AS kv
-)
-SELECT
-  SPLIT_PART(kv, '=', 1) AS key,
-  SPLIT_PART(kv, '=', 2) AS value
-FROM env_vars
+    variable
+  FROM
+    {{ ref('environment_variables') }};
+}
+
+-- Model block to define the transformation and fetch values using env_var()
+model: environment_variables_table {
+  SELECT
+    variable,
+    env_var(variable) as value
+  FROM
+    {{ ref('environment_variable_names') }};
+}
+
