@@ -8,6 +8,5 @@ jaffle_shop:
       password: "{{env_var('AIRFLOW_POSTGRES_PASSWORD')}}"
       port: 5432
       dbname: postgres
-      schema: public
       threads: 6
   
