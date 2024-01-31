@@ -24,7 +24,7 @@ models:
       materialized: table
       staging:
         materialized: view
-        schema: "{{env_var('ENT_DB')}}"
+        schema: "{{env_var('TEST_SCHEMA','newschema')}}"
 
 vars: 
   staging_order_name: stg_orders
