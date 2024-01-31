@@ -24,7 +24,7 @@ models:
       materialized: table
       staging:
         materialized: view
-        schema: staging
+        schema: testing
 
 vars: 
   staging_order_name: stg_orders
