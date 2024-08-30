@@ -3,9 +3,10 @@ from airflow.utils.task_group import TaskGroup
 from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
 from airflow.utils.dates import days_ago
 import os
+import yaml
 
-SNOWFLAKE_CONN_ID = "snowflake_connection"
-SNOWFLAKE_SCHEMA = "TEST_DEV_DB.TEST_SCHEMA"
+# SNOWFLAKE_CONN_ID = "snowflake_connection"
+# SNOWFLAKE_SCHEMA = "TEST_DEV_DB.TEST_SCHEMA"
 
 
 base_directory_path = os.path.dirname(os.path.abspath(__file__))
@@ -13,14 +14,25 @@ parent_dir_name = os.path.basename(os.path.dirname(base_directory_path))
 directory_name = os.path.basename(base_directory_path)
 dynamic_dag_id = f"{parent_dir_name}_{directory_name}"
 
+yml_file_path = os.path.join(parent_directory_path, 'snowflake_ci.yml')
+
+with open(yml_file_path, 'r') as file:
+    config = yaml.safe_load(file)
+
+SNOWFLAKE_CONN_ID = config.get('SNOWFLAKE_CONN_ID','DEFAULT_CONNECTION')
+SNOWFLAKE_SCHEMA = config.get('SNOWFLAKE_SCHEMA','DEFAULT_SCHEMA')
+OWNER = config.get('OWNER','DEFAULT_OWNER')
+TAGS = config.get('TAGS', [])
+
+
 default_args = {
-    "owner": "mpmathew",
+    "owner": OWNER,
     "snowflake_conn_id": SNOWFLAKE_CONN_ID,
 }
 dag = DAG(
     dynamic_dag_id,
     default_args=default_args,
-    tags=["mpmathew","objects","dynamic"],
+    tags=TAGS,
     description='Run SQL files in Snowflake, organized by subdirectories',
     schedule_interval=None,
     start_date=days_ago(1),
