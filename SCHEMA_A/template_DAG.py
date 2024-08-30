@@ -10,6 +10,7 @@ import yaml
 
 
 base_directory_path = os.path.dirname(os.path.abspath(__file__))
+parent_directory_path = os.path.dirname(base_directory_path)
 parent_dir_name = os.path.basename(os.path.dirname(base_directory_path))
 directory_name = os.path.basename(base_directory_path)
 dynamic_dag_id = f"{parent_dir_name}_{directory_name}"
