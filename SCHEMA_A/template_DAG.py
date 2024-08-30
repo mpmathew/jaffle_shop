@@ -36,6 +36,7 @@ dag = DAG(
     tags=TAGS,
     description='Run SQL files in Snowflake, organized by subdirectories',
     schedule_interval=None,
+    template_searchpath=base_directory_path,
     start_date=days_ago(1),
 )
 
