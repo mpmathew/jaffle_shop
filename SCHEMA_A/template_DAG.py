@@ -80,44 +80,43 @@ for subdir_name in target_subdirs:
     if not os.path.isdir(subdir_path):
         continue
     
-    with TaskGroup(group_id=subdir_name, dag=dag) as tg:
-        prev_task = None
-
-        n_tasks = 0
-        
-        for file in sorted(os.listdir(subdir_path)):
+    n_tasks = 0
+    for file in sorted(os.listdir(subdir_path)):
             if file.endswith('.sql'):
-                file_path = os.path.join(subdir_path, file)
-                task_id = f"{file.replace('.sql', '')}"
-                
-                with open(file_path, 'r') as f:
-                    sql_query = f.read()
-
-                    # Inject schema name into the SQL query if not already present
-                    if "USE" not in sql_query.upper():
-                        sql_query = f"USE {SNOWFLAKE_SCHEMA};\n" + sql_query
+                n_tasks = n_tasks + 1
+    
+    if n_tasks > 0:
+        with TaskGroup(group_id=subdir_name, dag=dag) as tg:
+            prev_task = None
+            
+            for file in sorted(os.listdir(subdir_path)):
+                if file.endswith('.sql'):
+                    file_path = os.path.join(subdir_path, file)
+                    task_id = f"{file.replace('.sql', '')}"
                     
-                    task = SnowflakeOperator(
-                        task_id=task_id,
-                        sql=sql_query,
-                        snowflake_conn_id=SNOWFLAKE_CONN_ID,
-                        params={"schema_name": SNOWFLAKE_SCHEMA},
-                        dag=dag,
-                    )
-                
-                    if prev_task:
-                        prev_task >> task 
-                
-                    prev_task = task
+                    with open(file_path, 'r') as f:
+                        sql_query = f.read()
 
-                    n_tasks = n_tasks + 1
-        
-        if n_tasks < 1:
-            continue
+                        # Inject schema name into the SQL query if not already present
+                        if "USE" not in sql_query.upper():
+                            sql_query = f"USE {SNOWFLAKE_SCHEMA};\n" + sql_query
+                        
+                        task = SnowflakeOperator(
+                            task_id=task_id,
+                            sql=sql_query,
+                            snowflake_conn_id=SNOWFLAKE_CONN_ID,
+                            params={"schema_name": SNOWFLAKE_SCHEMA},
+                            dag=dag,
+                        )
+                    
+                        if prev_task:
+                            prev_task >> task 
+                    
+                        prev_task = task
 
-        task_groups[subdir_name] = tg
-        
-        if prev_group:
-            prev_group >> tg
-        
-        prev_group = tg
+            task_groups[subdir_name] = tg
+            
+            if prev_group:
+                prev_group >> tg
+            
+            prev_group = tg
