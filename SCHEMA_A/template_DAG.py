@@ -39,10 +39,10 @@ default_args = {
     "snowflake_conn_id": SNOWFLAKE_CONN_ID,
 }
 
-# Read the content of README.md
-readme_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'README.md')
-with open(readme_path, 'r') as file:
-    readme_content = file.read()
+# # Read the content of README.md
+# readme_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'README.md')
+# with open(readme_path, 'r') as file:
+#     readme_content = file.read()
 
 # Initialize the DAG
 dag = DAG(
