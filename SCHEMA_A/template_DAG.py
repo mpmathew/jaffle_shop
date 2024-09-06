@@ -70,6 +70,39 @@ target_subdirs = [
     'dml'
 ]
 
+def create_tasks_for_subdir(subdir_path, subdir_name, dag):
+    n_tasks = 0
+    prev_task = None
+    
+    for file in sorted(os.listdir(subdir_path)):
+        if file.endswith('.sql'):
+            file_path = os.path.join(subdir_path, file)
+            task_id = f"{file.replace('.sql', '')}"
+            
+            with open(file_path, 'r') as f:
+                sql_query = f.read()
+
+                # Inject schema name into the SQL query if not already present
+                if "USE" not in sql_query.upper():
+                    sql_query = f"USE {SNOWFLAKE_SCHEMA};\n" + sql_query
+                
+                task = SnowflakeOperator(
+                    task_id=task_id,
+                    sql=sql_query,
+                    snowflake_conn_id=SNOWFLAKE_CONN_ID,
+                    params={"schema_name": SNOWFLAKE_SCHEMA},
+                    dag=dag,
+                )
+                
+                if prev_task:
+                    prev_task >> task 
+                
+                prev_task = task
+
+                n_tasks += 1
+
+    return n_tasks, prev_task
+
 # Create task groups and tasks
 task_groups = {}
 prev_group = None
@@ -80,42 +113,13 @@ for subdir_name in target_subdirs:
     if not os.path.isdir(subdir_path):
         continue
     
-    with TaskGroup(group_id=subdir_name, dag=dag) as tg:
-        prev_task = None
-
-        n_tasks = 0
-        
-        for file in sorted(os.listdir(subdir_path)):
-            if file.endswith('.sql'):
-                file_path = os.path.join(subdir_path, file)
-                task_id = f"{file.replace('.sql', '')}"
-                
-                with open(file_path, 'r') as f:
-                    sql_query = f.read()
-
-                    # Inject schema name into the SQL query if not already present
-                    if "USE" not in sql_query.upper():
-                        sql_query = f"USE {SNOWFLAKE_SCHEMA};\n" + sql_query
-                    
-                    task = SnowflakeOperator(
-                        task_id=task_id,
-                        sql=sql_query,
-                        snowflake_conn_id=SNOWFLAKE_CONN_ID,
-                        params={"schema_name": SNOWFLAKE_SCHEMA},
-                        dag=dag,
-                    )
-                
-                    if prev_task:
-                        prev_task >> task 
-                
-                    prev_task = task
-
-                    n_tasks = n_tasks + 1
-        
-        if n_tasks < 1:
-            continue
-
-        task_groups[subdir_name] = tg
+    # Create tasks for the subdirectory
+    n_tasks, prev_task = create_tasks_for_subdir(subdir_path, subdir_name, dag)
+    
+    # Only create a TaskGroup if there are tasks in the subdirectory
+    if n_tasks > 0:
+        with TaskGroup(group_id=subdir_name, dag=dag) as tg:
+            task_groups[subdir_name] = tg
         
         if prev_group:
             prev_group >> tg
