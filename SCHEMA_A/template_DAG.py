@@ -1,85 +1,123 @@
 from airflow import DAG
 from airflow.utils.task_group import TaskGroup
 from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
+from airflow.hooks.base import BaseHook
 from airflow.utils.dates import days_ago
+from airflow.models import Variable
 import os
 import yaml
 
-# SNOWFLAKE_CONN_ID = "snowflake_connection"
-# SNOWFLAKE_SCHEMA = "TEST_DEV_DB.TEST_SCHEMA"
-
-
+# Set base directory and parent directory paths
 base_directory_path = os.path.dirname(os.path.abspath(__file__))
 parent_directory_path = os.path.dirname(base_directory_path)
 parent_dir_name = os.path.basename(os.path.dirname(base_directory_path))
 directory_name = os.path.basename(base_directory_path)
 dynamic_dag_id = f"{parent_dir_name}_{directory_name}"
 
+# Load configuration from YAML file
 yml_file_path = os.path.join(parent_directory_path, 'snowflake_ci.yml')
-
 with open(yml_file_path, 'r') as file:
     config = yaml.safe_load(file)
 
-SNOWFLAKE_CONN_ID = config.get('SNOWFLAKE_CONN_ID','DEFAULT_CONNECTION')
+# Extract configuration variables
+SNOWFLAKE_CONN_ID = config.get('SNOWFLAKE_CONN_ID', 'DEFAULT_CONNECTION')
 SNOWFLAKE_SCHEMA = config.get('SNOWFLAKE_SCHEMA','DEFAULT_SCHEMA')
-OWNER = config.get('OWNER','DEFAULT_OWNER')
+
+# # Fetch Snowflake schema from the connection and folder
+# extras = BaseHook.get_connection(SNOWFLAKE_CONN_ID).extra_dejson
+# SNOWFLAKE_SCHEMA = extras['database'] + "." + directory_name
+
+OWNER = config.get('OWNER', 'DEFAULT_OWNER')
 TAGS = config.get('TAGS', [])
 
+# Add owner to tags
+TAGS.append(OWNER)
 
+# Set default arguments for the DAG
 default_args = {
     "owner": OWNER,
     "snowflake_conn_id": SNOWFLAKE_CONN_ID,
 }
+
+# Read the content of README.md
+readme_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'README.md')
+with open(readme_path, 'r') as file:
+    readme_content = file.read()
+
+# Initialize the DAG
 dag = DAG(
     dynamic_dag_id,
     default_args=default_args,
-    tags=TAGS,
     description='Run SQL files in Snowflake, organized by subdirectories',
     schedule_interval=None,
     template_searchpath=base_directory_path,
     start_date=days_ago(1),
+    tags=TAGS,
+    doc_md=readme_content,
 )
 
-target_subdirs = ['functions', 'stored_proc', 'streams']
-subdir_to_tg_name = {
-    'functions': 'Functions',
-    'stored_proc': 'Procedures',
-    'streams': 'Streams'
-}
-task_groups = {}
+# Define target subdirectories
+target_subdirs = [
+    'file_formats', 
+    'stages', 
+    'tables',
+    'views',
+    'sequences',
+    'streams', 
+    'functions', 
+    'procedures',
+    'tasks',
+    'dml'
+]
 
-for subdir, dirs, files in os.walk(base_directory_path):
-    subdir_name = os.path.basename(subdir)
-    if subdir_name not in target_subdirs or subdir == base_directory_path:
+# Create task groups and tasks
+task_groups = {}
+prev_group = None
+
+for subdir_name in target_subdirs:
+    subdir_path = os.path.join(base_directory_path, subdir_name)
+    
+    if not os.path.isdir(subdir_path):
         continue
     
-    tg_name = subdir_to_tg_name.get(subdir_name, subdir_name)
-    
-    with TaskGroup(group_id=tg_name, dag=dag) as tg:
+    with TaskGroup(group_id=subdir_name, dag=dag) as tg:
         prev_task = None
-        
-        for file in sorted(files):
-            if file.endswith('.sql'):
-                file_path = os.path.join(subdir, file)
-                task_id = f"{tg_name}_{file.replace('.sql', '')}"
-                   
-                task = SnowflakeOperator(
-                    task_id=task_id,
-                    sql=file_path,
-                    snowflake_conn_id=SNOWFLAKE_CONN_ID,
-                    params={"schema_name": SNOWFLAKE_SCHEMA},
-                    dag=dag,
-                )
-                
-                if prev_task:
-                    prev_task >> task 
-                
-                prev_task = task
-        
-        task_groups[tg_name] = tg
 
-if 'Functions' in task_groups and 'Procedures' in task_groups:
-    task_groups['Functions'] >> task_groups['Procedures']
-if 'Procedures' in task_groups and 'Streams' in task_groups:
-    task_groups['Procedures'] >> task_groups['Streams']
-##
+        n_tasks = 0
+        
+        for file in sorted(os.listdir(subdir_path)):
+            if file.endswith('.sql'):
+                file_path = os.path.join(subdir_path, file)
+                task_id = f"{file.replace('.sql', '')}"
+                
+                with open(file_path, 'r') as f:
+                    sql_query = f.read()
+
+                    # Inject schema name into the SQL query if not already present
+                    if "USE" not in sql_query.upper():
+                        sql_query = f"USE {SNOWFLAKE_SCHEMA};\n" + sql_query
+                    
+                    task = SnowflakeOperator(
+                        task_id=task_id,
+                        sql=sql_query,
+                        snowflake_conn_id=SNOWFLAKE_CONN_ID,
+                        params={"schema_name": SNOWFLAKE_SCHEMA},
+                        dag=dag,
+                    )
+                
+                    if prev_task:
+                        prev_task >> task 
+                
+                    prev_task = task
+
+                    n_tasks = n_tasks + 1
+        
+        if n_tasks < 1:
+            continue
+
+        task_groups[subdir_name] = tg
+        
+        if prev_group:
+            prev_group >> tg
+        
+        prev_group = tg
