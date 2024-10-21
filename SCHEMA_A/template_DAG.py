@@ -70,6 +70,14 @@ target_subdirs = [
     'dml'
 ]
 
+obj_yml_file_path = os.path.join(base_directory_path, 'objects.yml')
+if os.path.exists(obj_yml_file_path):
+    with open(obj_yml_file_path, 'r') as file:
+        object_dirs = yaml.safe_load(file)
+        if 'OBJECTS' in object_dirs and object_dirs['OBJECTS']:
+            target_subdirs = object_dirs['OBJECTS']
+
+
 # Create task groups and tasks
 task_groups = {}
 prev_group = None
@@ -120,4 +128,3 @@ for subdir_name in target_subdirs:
                 prev_group >> tg
             
             prev_group = tg
-###
