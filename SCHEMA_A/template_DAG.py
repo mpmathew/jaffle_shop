@@ -21,11 +21,10 @@ with open(yml_file_path, 'r') as file:
 
 # Extract configuration variables
 SNOWFLAKE_CONN_ID = config.get('SNOWFLAKE_CONN_ID', 'DEFAULT_CONNECTION')
-SNOWFLAKE_SCHEMA = config.get('SNOWFLAKE_SCHEMA','DEFAULT_SCHEMA')
 
-# # Fetch Snowflake schema from the connection and folder
-# extras = BaseHook.get_connection(SNOWFLAKE_CONN_ID).extra_dejson
-# SNOWFLAKE_SCHEMA = extras['database'] + "." + directory_name
+# Fetch Snowflake schema from the connection and folder
+extras = BaseHook.get_connection(SNOWFLAKE_CONN_ID).extra_dejson
+SNOWFLAKE_SCHEMA = extras['database'] + "." + directory_name
 
 OWNER = config.get('OWNER', 'DEFAULT_OWNER')
 TAGS = config.get('TAGS', [])
@@ -39,10 +38,10 @@ default_args = {
     "snowflake_conn_id": SNOWFLAKE_CONN_ID,
 }
 
-# # Read the content of README.md
-# readme_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'README.md')
-# with open(readme_path, 'r') as file:
-#     readme_content = file.read()
+# Read the content of README.md
+readme_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'README.md')
+with open(readme_path, 'r') as file:
+    readme_content = file.read()
 
 # Initialize the DAG
 dag = DAG(
@@ -53,7 +52,7 @@ dag = DAG(
     template_searchpath=base_directory_path,
     start_date=days_ago(1),
     tags=TAGS,
-    # doc_md=readme_content,
+    doc_md=readme_content,
 )
 
 # Define target subdirectories
@@ -67,6 +66,7 @@ target_subdirs = [
     'functions', 
     'procedures',
     'tasks',
+    'test',
     'dml'
 ]
 
@@ -88,43 +88,42 @@ for subdir_name in target_subdirs:
     if not os.path.isdir(subdir_path):
         continue
     
-    n_tasks = 0
-    for file in sorted(os.listdir(subdir_path)):
-            if file.endswith('.sql'):
-                n_tasks = n_tasks + 1
+    # Check if there are any .sql files in the subdirectory
+    sql_files = [file for file in sorted(os.listdir(subdir_path)) if file.endswith('.sql')]
     
-    if n_tasks > 0:
-        with TaskGroup(group_id=subdir_name, dag=dag) as tg:
-            prev_task = None
+    if not sql_files:
+        continue
+    
+    with TaskGroup(group_id=subdir_name, dag=dag) as tg:
+        prev_task = None
+        
+        for file in sql_files:
+            file_path = os.path.join(subdir_path, file)
+            task_id = f"{file.replace('.sql', '')}"
             
-            for file in sorted(os.listdir(subdir_path)):
-                if file.endswith('.sql'):
-                    file_path = os.path.join(subdir_path, file)
-                    task_id = f"{file.replace('.sql', '')}"
-                    
-                    with open(file_path, 'r') as f:
-                        sql_query = f.read()
+            with open(file_path, 'r') as f:
+                sql_query = f.read()
 
-                        # Inject schema name into the SQL query if not already present
-                        if "USE" not in sql_query.upper():
-                            sql_query = f"USE {SNOWFLAKE_SCHEMA};\n" + sql_query
-                        
-                        task = SnowflakeOperator(
-                            task_id=task_id,
-                            sql=sql_query,
-                            snowflake_conn_id=SNOWFLAKE_CONN_ID,
-                            params={"schema_name": SNOWFLAKE_SCHEMA},
-                            dag=dag,
-                        )
-                    
-                        if prev_task:
-                            prev_task >> task 
-                    
-                        prev_task = task
-
-            task_groups[subdir_name] = tg
+                # Inject schema name into the SQL query if not already present
+                if "USE" not in sql_query.upper():
+                    sql_query = f"USE {SNOWFLAKE_SCHEMA};\n" + sql_query
+                
+                task = SnowflakeOperator(
+                    task_id=task_id,
+                    sql=sql_query,
+                    snowflake_conn_id=SNOWFLAKE_CONN_ID,
+                    params={"schema_name": SNOWFLAKE_SCHEMA},
+                    dag=dag,
+                )
             
-            if prev_group:
-                prev_group >> tg
+                if prev_task:
+                    prev_task >> task 
             
-            prev_group = tg
+                prev_task = task
+        
+        task_groups[subdir_name] = tg
+        
+        if prev_group:
+            prev_group >> tg
+        
+        prev_group = tg
