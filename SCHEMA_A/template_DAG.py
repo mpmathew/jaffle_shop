@@ -19,12 +19,12 @@ yml_file_path = os.path.join(parent_directory_path, 'snowflake_ci.yml')
 with open(yml_file_path, 'r') as file:
     config = yaml.safe_load(file)
 
-# Extract configuration variables
-SNOWFLAKE_CONN_ID = config.get('SNOWFLAKE_CONN_ID', 'DEFAULT_CONNECTION')
+# # Extract configuration variables
+# SNOWFLAKE_CONN_ID = config.get('SNOWFLAKE_CONN_ID', 'DEFAULT_CONNECTION')
 
-# Fetch Snowflake schema from the connection and folder
-extras = BaseHook.get_connection(SNOWFLAKE_CONN_ID).extra_dejson
-SNOWFLAKE_SCHEMA = extras['database'] + "." + directory_name
+# # Fetch Snowflake schema from the connection and folder
+# extras = BaseHook.get_connection(SNOWFLAKE_CONN_ID).extra_dejson
+# SNOWFLAKE_SCHEMA = extras['database'] + "." + directory_name
 
 OWNER = config.get('OWNER', 'DEFAULT_OWNER')
 TAGS = config.get('TAGS', [])
@@ -35,13 +35,13 @@ TAGS.append(OWNER)
 # Set default arguments for the DAG
 default_args = {
     "owner": OWNER,
-    "snowflake_conn_id": SNOWFLAKE_CONN_ID,
+    # "snowflake_conn_id": SNOWFLAKE_CONN_ID,
 }
 
-# Read the content of README.md
-readme_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'README.md')
-with open(readme_path, 'r') as file:
-    readme_content = file.read()
+# # Read the content of README.md
+# readme_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'README.md')
+# with open(readme_path, 'r') as file:
+#     readme_content = file.read()
 
 # Initialize the DAG
 dag = DAG(
