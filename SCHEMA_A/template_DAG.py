@@ -52,7 +52,7 @@ dag = DAG(
     template_searchpath=base_directory_path,
     start_date=days_ago(1),
     tags=TAGS,
-    doc_md=readme_content,
+    # doc_md=readme_content,
 )
 
 # Define target subdirectories
