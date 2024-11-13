@@ -1,3 +1,4 @@
 OBJECTS:
   - "streams"
   - "functions"
+  - "streams/release_v10"
