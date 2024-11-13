@@ -94,7 +94,7 @@ for subdir_name in target_subdirs:
     if not sql_files:
         continue
     
-    with TaskGroup(group_id=subdir_name, dag=dag) as tg:
+    with TaskGroup(group_id=subdir_name.replace("/","_"), dag=dag) as tg:
         prev_task = None
         
         for file in sql_files:
