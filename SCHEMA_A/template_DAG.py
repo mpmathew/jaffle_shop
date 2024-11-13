@@ -121,7 +121,7 @@ for subdir_name in target_subdirs:
             
                 prev_task = task
         
-        task_groups[subdir_name].replace("/","_") = tg
+        task_groups[subdir_name.replace("/","_")] = tg
         
         if prev_group:
             prev_group >> tg
