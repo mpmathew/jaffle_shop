@@ -111,8 +111,8 @@ for subdir_name in target_subdirs:
                 task = SnowflakeOperator(
                     task_id=task_id,
                     sql=sql_query,
-                    snowflake_conn_id=SNOWFLAKE_CONN_ID,
-                    params={"schema_name": SNOWFLAKE_SCHEMA},
+                    # snowflake_conn_id=SNOWFLAKE_CONN_ID,
+                    # params={"schema_name": SNOWFLAKE_SCHEMA},
                     dag=dag,
                 )
             
